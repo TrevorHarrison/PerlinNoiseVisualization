@@ -4,16 +4,31 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 import javax.swing.JPanel;
 
 public class NoisePanel extends JPanel {
 
-	private OpenSimplexNoise noise = new OpenSimplexNoise(455563434);
-	private float anim;
-	private float animStep = .05f;
+	/* package */ OpenSimplexNoise noise;
+	/* package */ int zoom = 20;
+	private ColorMapper colorMapper = new ColorMapper(Color.black, Color.red, Color.orange, Color.yellow, Color.green,
+			Color.blue, Color.white);
 
 	public NoisePanel() {
+		this(new Random().nextLong());
+	}
+
+	public NoisePanel(long seed) {
+		noise = new OpenSimplexNoise(seed);
+	}
+
+	public void setSeed(long newSeed) {
+		noise = new OpenSimplexNoise(newSeed);
+	}
+
+	public void setZoom(int zoom) {
+		this.zoom = zoom;
 	}
 
 	@Override
@@ -38,33 +53,11 @@ public class NoisePanel extends JPanel {
 		BufferedImage bufImg = new BufferedImage(width, ht, BufferedImage.TYPE_INT_ARGB);
 		for (int x = 0; x < getWidth(); x++) {
 			for (int y = 0; y < getHeight(); y++) {
-				bufImg.setRGB(x, y, mapColor(
-						noise.eval(x / 20f, y / 20f) /* / (double) (width * 1), y / (double) (ht * 20)) */, anim));
+				double pnVal = noise.eval(x / (float) zoom, y / (float) zoom);
+				bufImg.setRGB(x, y, colorMapper.mapColor(pnVal, -.88, .88));
 			}
 		}
 		g2d.drawImage(bufImg, null, null);
-		anim += animStep;
-		if (anim < 0 || anim >= 1) {
-			animStep = -animStep;
-		}
-	}
-
-	int mapColor(double val, double lvl) {
-		if (val < lvl - .9) {
-			return Color.black.getRGB();
-		} else if (val < lvl - .5) {
-			return Color.DARK_GRAY.getRGB();
-		} else if (val < lvl - .1) {
-			return Color.gray.getRGB();
-		} else if (val < lvl + .1) {
-			return Color.blue.getRGB();
-		} else if (val < lvl + .5) {
-			return Color.green.getRGB();
-		} else if (val < lvl + .9) {
-			return Color.GREEN.darker().getRGB();
-		} else {
-			return Color.white.getRGB();
-		}
 	}
 
 }
