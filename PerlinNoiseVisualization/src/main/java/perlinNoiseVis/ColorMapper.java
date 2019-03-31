@@ -23,7 +23,7 @@ public class ColorMapper {
 
 	public int mapColor(double d, double min, double max) {
 		d = (d + (-min)) / (max - min);
-		return colors[(int) (d * colors.length)];
+		return colors[Math.min((int) (d * colors.length), colors.length - 1)];
 	}
 
 }

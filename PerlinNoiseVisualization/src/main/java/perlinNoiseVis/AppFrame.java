@@ -4,15 +4,14 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JSplitPane;
-import javax.swing.SwingUtilities;
+import javax.swing.JToggleButton;
 import javax.swing.border.EmptyBorder;
 
 public class AppFrame extends JFrame {
@@ -28,17 +27,6 @@ public class AppFrame extends JFrame {
 				e.printStackTrace();
 			}
 		});
-		Timer t = new Timer(true);
-		t.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				SwingUtilities.invokeLater(() -> {
-					if (frame.isVisible()) {
-						frame.repaint();
-					}
-				});
-			}
-		}, 500, 100);
 	}
 
 	public AppFrame() {
@@ -57,11 +45,11 @@ public class AppFrame extends JFrame {
 		contentPane.add(splitPane, BorderLayout.CENTER);
 
 		JPanel buttonPanel = new JPanel(new FlowLayout());
-		contentPane.add(buttonPanel, BorderLayout.SOUTH);
 
 		JButton refreshButton = new JButton("Refresh");
 		refreshButton.addActionListener(e -> {
 			nsp.refreshPlot();
+			repaint();
 		});
 		buttonPanel.add(refreshButton);
 
@@ -72,10 +60,40 @@ public class AppFrame extends JFrame {
 		reSeedButton.addActionListener(e -> {
 			np.setSeed(new Random().nextLong());
 			nsp.refreshPlot();
+			repaint();
 			double[] minMax = nsp.getMinMax();
 			minmaxLabel.setText(String.format("%.2f/%.2f", minMax[0], minMax[1]));
 		});
 		buttonPanel.add(reSeedButton);
+
+		JSlider zoomSlider = new JSlider(1, 500);
+		zoomSlider.setValue(20);
+		zoomSlider.addChangeListener(e -> {
+			np.setZoom(zoomSlider.getValue());
+			nsp.refreshPlot();
+			repaint();
+		});
+		buttonPanel.add(zoomSlider);
+
+		JSlider floorSlider = new JSlider(1, 100);
+		floorSlider.setValue(50);
+		floorSlider.addChangeListener(e -> {
+			np.setCutOffFloor(floorSlider.getValue());
+			nsp.refreshPlot();
+			repaint();
+		});
+		buttonPanel.add(floorSlider);
+
+		JToggleButton binaryModeButton = new JToggleButton("Binary Mode");
+		binaryModeButton.addChangeListener(e -> {
+			np.setBinaryMode(binaryModeButton.isSelected());
+			repaint();
+		});
+		buttonPanel.add(binaryModeButton);
+
+		buttonPanel.invalidate();
+
+		contentPane.add(buttonPanel, BorderLayout.SOUTH);
 	}
 
 }

@@ -10,8 +10,15 @@ import javax.swing.JPanel;
 
 public class NoisePanel extends JPanel {
 
+	private static final float SIMPLEX_NOISE_MIN = -0.88f;
+	private static final float SIMPLEX_NOISE_MAX = 0.88f;
+	private static final float SIMPLEX_NOISE_RANGE = SIMPLEX_NOISE_MAX - SIMPLEX_NOISE_MIN;
+
 	/* package */ OpenSimplexNoise noise;
 	/* package */ int zoom = 20;
+	int cutOffPercent;
+	boolean binaryMode;
+
 	private ColorMapper colorMapper = new ColorMapper(Color.black, Color.red, Color.orange, Color.yellow, Color.green,
 			Color.blue, Color.white);
 
@@ -31,33 +38,48 @@ public class NoisePanel extends JPanel {
 		this.zoom = zoom;
 	}
 
+	public int getZoom() {
+		return zoom;
+	}
+
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
 
 		Graphics2D g2d = (Graphics2D) g;
-		//		int dia = Math.min(getWidth(), getHeight());
-		//		int radius = dia / 2;
-		//		int steps = dia * 2;
-		//		double stepInc = (Math.PI * 2) / steps;
-		//
-		//		for (double a = 0; a < Math.PI * 2; a += stepInc) {
-		//			double p1 = radius + (radius * Math.sin(a));
-		//			double p2 = radius + (radius * Math.cos(a));
-		//			g2d.drawRect((int) p1, (int) p2, 1, 1);
-		//			System.out.println("" + a + ", " + p1 + ", " + p2 + ", " + stepInc);
-		//		}
 
 		int ht = getHeight();
 		int width = getWidth();
+		float cutOff = SIMPLEX_NOISE_MIN + (SIMPLEX_NOISE_RANGE * (cutOffPercent / 100f));
+
 		BufferedImage bufImg = new BufferedImage(width, ht, BufferedImage.TYPE_INT_ARGB);
 		for (int x = 0; x < getWidth(); x++) {
 			for (int y = 0; y < getHeight(); y++) {
 				double pnVal = noise.eval(x / (float) zoom, y / (float) zoom);
-				bufImg.setRGB(x, y, colorMapper.mapColor(pnVal, -.88, .88));
+				int colorVal = binaryMode
+						? colorMapper.mapColor(pnVal < cutOff ? SIMPLEX_NOISE_MIN : SIMPLEX_NOISE_MAX,
+								SIMPLEX_NOISE_MIN, SIMPLEX_NOISE_MAX)
+						: colorMapper.mapColor(pnVal, SIMPLEX_NOISE_MIN, SIMPLEX_NOISE_MAX);
+				bufImg.setRGB(x, y, colorVal);
 			}
 		}
 		g2d.drawImage(bufImg, null, null);
+	}
+
+	public int getCutOffPercent() {
+		return cutOffPercent;
+	}
+
+	public void setCutOffFloor(int cutOffPercent) {
+		this.cutOffPercent = cutOffPercent;
+	}
+
+	public boolean isBinaryMode() {
+		return binaryMode;
+	}
+
+	public void setBinaryMode(boolean binaryMode) {
+		this.binaryMode = binaryMode;
 	}
 
 }
